@@ -9,11 +9,11 @@ published_at: 2026-09-12 02:40
 
 ## はじめに
 
-2026/09/11(金)に開催されたGo Conference 2026に参加してきました。中でも以下のショートワークショップは、その場では理解しきれない部分が多かったため、終了後に改めて手を動かしながら復習しました。本記事では、そこで得た気づきと学びをまとめます。
+2026/09/11(金)に開催されたGo Conference 2026に参加してきました。中でも以下のショートワークショップは、その場では理解しきれない部分が多かったため、終了後に改めて手を動かしながら復習しました。本記事では、追加で調べたことも含めた学びをまとめます。
 
 @[card](https://gocon.jp/2026/timetable/1264338/)
 
-基本的な説明はスライドやリポジトリに記載されているため、そちらを参照してください。
+基本的な説明はスライドやリポジトリに記載されています。**全体の流れは同じで、私が自己理解のために自分の言葉とコードでアウトプットしただけなので、元々のワークショップに興味のある方はそちらを参照してください**。
 
 @[card](https://speakerdeck.com/po3rin/go-x-simd-de-kousokuka-suru-bekutoru-kensaku-de-simd-ga-kiku-kyoukai-o-sagure)
 @[card](https://github.com/po3rin/gocon2026-simd-search)
@@ -91,15 +91,15 @@ CALL   runtime.panicBounds(SB)
 
 :::
 
-注目したいのは命令の末尾の **`SS`** です。これは Scalar Single の略で「float32 を 1 個」を意味します。つまり 1 命令で float32 を 1 個しか扱っていません。これをスカラ処理と呼びます。
+注目したいのは命令の末尾の `SS` です。これは Scalar Single の略で「float32 を 1 個」を意味します。つまり 1 命令で float32 を 1 個しか扱っていません。これをスカラ処理と呼びます。
 
-面白いのは、使われている `X0` / `X1` が **128 [bit] の XMM レジスタ**だという点です。float32 が 4 個入る箱を用意しておきながら、1 個分しか使っていません。対して CPU には 256 [bit] のベクトルレジスタ（`Y0` など）もあり、**float32 (32 [bit]) が 8 個入ります**。8 個詰めて掛け算命令を 1 回実行すると、8 個分の掛け算が同時に走ります[^4]。この発想が SIMD です。
+面白いのは、使われている `X0` / `X1` が 128 [bit] の XMM レジスタだという点です。float32 が 4 個入る箱を用意しておきながら、1 個分しか使っていません。対して CPU には 256 [bit] のベクトルレジスタ（`Y0` など）もあり、float32 (32 [bit]) が 8 個入ります。8 個詰めて掛け算命令を 1 回実行すると、8 個分の掛け算が同時に走ります[^4]。この発想が SIMD です。
 
 [^4]: この詰めた 1 個ぶんの区画をレーンと呼びます。
 
 つまり 384 次元の内積なら、スカラで 384 回かかる掛け算が 48 回で済むので、理論上は 8 倍になるはずです(実際はそう上手くはいかないのですが...w)。
 
-このあと Stage 1 で SIMD 化すると、上の 3 命令が `Y` レジスタと **`PS`（Packed Single）** の命令に置き換わります。**`SS` が `PS` に変わるのが、そのまま「1 個 → 8 個」の違い**になります。
+このあと Stage 1 で SIMD 化すると、上の 3 命令が `Y` レジスタと `PS`（Packed Single）の命令に置き換わります。**`SS` が `PS` に変わるのが、そのまま「1 個 → 8 個」の違い**になります。
 
 ![scalar-vs-simd.png](https://raw.githubusercontent.com/po3rin/gocon2026-simd-search/refs/heads/main/docs/images/scalar-vs-simd.png)
 *https://github.com/po3rin/gocon2026-simd-search/ より引用*
@@ -118,7 +118,7 @@ CALL   runtime.panicBounds(SB)
 | 対象アーキ | 1 ソースで全アーキ | amd64 / arm64 / wasm で API が別 |
 
 また、関連するメインの Issue は調べた限り以下の通りです。
-- [#78979](https://github.com/golang/go/issues/78979)（open）: AMD64 の archsimd を**デフォルト有効にする**提案。通れば `GOEXPERIMENT` が不要になる
+- [#78979](https://github.com/golang/go/issues/78979)（open）: AMD64 の archsimd をデフォルト有効にする提案。通れば `GOEXPERIMENT` が不要になる
 - [#79781](https://github.com/golang/go/issues/79781)（open）: ARM64 の SVE 命令セット対応。SVE はレジスタ幅が実装依存なので、ポータブル API の設計とも絡みそう
 - [#79413](https://github.com/golang/go/issues/79413)（open）: 標準ライブラリ `crypto` の手書きアセンブリを Go の SIMD に置き換える。これが本来の狙いだと思う
 - [#80857](https://github.com/golang/go/issues/80857)（closed / completed）: min/max の畳み込みループをコンパイラが自動ベクトル化する
@@ -127,7 +127,7 @@ CALL   runtime.panicBounds(SB)
 
 ### Go の simd/archsimd パッケージ
 
-**1. 型が「データの形」を表す**
+#### 1. 型が「データの形」を表す
 
 型名そのものが「何 bit 幅のレジスタに、どの型を何個詰めるか」を意味します。型を選ぶことが、使う命令幅とレーン数を選ぶことになります。
 
@@ -137,7 +137,7 @@ var b archsimd.Float32x16   // float32 を 16 レーン = 512 [bit] (AVX-512)
 var c archsimd.Uint64x4     // uint64 を 4 レーン
 ```
 
-**2. メソッドが 1 つの CPU 命令に対応する**
+#### 2. メソッドが 1 つの CPU 命令に対応する
 
 各メソッドはベクトル命令にほぼ 1 対 1 で変換されるので、メソッド名から出てくる機械語の見当がつきます。
 
@@ -149,7 +149,7 @@ po := xo.OnesCount()               // popcount -> VPOPCNTQ
 va.Store(xs)                       // レジスタ -> スライス (ストア)
 ```
 
-**3. 使う前にその CPU が対応しているか確かめる**
+#### 3. 使う前にその CPU が対応しているか確かめる
 
 未対応の CPU でメソッドを呼ぶと、**不正命令 (SIGILL) でプロセスごと落ちてしまいます**。recover できる panic にもならないので、実行時に機能フラグでガードする必要があります。
 例えば、x86 では `MulAdd` が使う FMA 命令が AVX2 に含まれておらず別の拡張として提供されているので、以下のように 2 つ確認する必要があります。arm64 では FMA 相当の命令が Neon 自体に含まれるため、この区別はないそうです。
@@ -221,7 +221,7 @@ VMOVDQU Y2, 0x1b8(SP)    ; レジスタからスタックへ store
 
 ### ルーフラインモデル
 
-高速化の手を打つ前に **「いま何が理由で詰まっているか」と「追加でどの程度伸びる余地があるか」** を明確にするためのモデルで、以下のように屋根の形をしているのが名前の由来です。初出は[Roofline: An Insightful Visual Performance Model for Floating-Point Programs and Multicore Architectures](https://escholarship.org/content/qt5tz795vq/qt5tz795vq.pdf)（Williams et al. 2008）です。縦軸を性能 [flop/s]、横軸を算術強度 [flop/byte] に取ると、基本的にはこの線より上には行けないことを意味します。
+高速化の手を打つ前に**「いま何が理由で詰まっているか」と「追加でどの程度伸びる余地があるか」**を明確にするためのモデルで、以下のように屋根の形をしているのが名前の由来です。初出は[Roofline: An Insightful Visual Performance Model for Floating-Point Programs and Multicore Architectures](https://escholarship.org/content/qt5tz795vq/qt5tz795vq.pdf)（Williams et al. 2008）です。縦軸を性能 [flop/s]、横軸を算術強度 [flop/byte] に取ると、基本的にはこの線より上には行けないことを意味します。
 
 ![roofline-concept.png()](https://raw.githubusercontent.com/po3rin/gocon2026-simd-search/refs/heads/main/docs/images/roofline-concept.png)
 *https://github.com/po3rin/gocon2026-simd-search/ より引用*
@@ -273,7 +273,7 @@ func Dot(a, b []float32) float32 {
 func (ix *Index) Search(q []float32, k int) []Result {
     t := newTopK(k)
     for id := 0; id < ix.N; id++ {
-        t.push(id, vec.Dot(q, ix.Vec(id)))
+        t.push(id, Dot(q, ix.Vec(id)))
     }
     return t.results()
 }
@@ -317,7 +317,7 @@ func Dot(a, b []float32) float32 {
 }
 ```
 
-この実装で bench を回すと、以下の結果が得られました。34.878 [ms] から 10.175 [ms] で **3.43 倍**、7.548 GFLOP/s まできました。
+この実装で bench を回すと、以下の結果が得られました。34.878 [ms] から 10.175 [ms] で 3.43 倍、7.548 GFLOP/s まできました。
 
 ```
 BenchmarkSearchNaive-4    238    10174585 ns/op    15096.44 MB/s    0.5000 AI(flop/byte)    7.548 GFLOP/s    153.6 MB/query
@@ -471,7 +471,7 @@ $$
 
 (ここで $d_i$ は DB ベクトルの、$q_i$ はクエリの元の float32 の要素で、$\mathrm{code8}_i$ と $\mathrm{q8}_i$ がそれぞれを量子化した int8、$\mathrm{dScale}$ と $\mathrm{qScale}$ がその scale になります)
 
-この実装で bench を回すと、以下の結果が得られました。内積単体は 371.9 [ns] から 31.38 [ns] で **11.85 倍**。float32 の SIMD 内積より高速化されています。全探索は 9.826 [ms] から 3.965 [ms] で **2.48 倍**になりました！
+この実装で bench を回すと、以下の結果が得られました。内積単体は 371.9 [ns] から 31.38 [ns] で 11.85 倍。float32 の SIMD 内積より高速化されています。全探索は 9.826 [ms] から 3.965 [ms] で 2.48 倍になりました！
 
 ```
 BenchmarkDotInt8Naive-4     6374116        371.9 ns/op
@@ -518,7 +518,7 @@ func (ix *Index) Code(id int) []uint64 {
 }
 ```
 
-この実装で bench を回すと、以下の結果が得られました。同じ実行内の比較で 37.579 [ms] から 0.899 [ms]、**41.8 倍**です 👀
+この実装で bench を回すと、以下の結果が得られました。同じ実行内の比較で 37.579 [ms] から 0.899 [ms]、41.8 倍です 👀
 
 ```
 BenchmarkSearchNaive-4              63    37578911 ns/op    4087.40 MB/s    0.5000 AI    2.044 GFLOP/s    153.6 MB/query
@@ -568,7 +568,7 @@ vec.DotPortable@simd512(SB)   ← 512 bit 専用
 スタブは `simd.maxVectorSize` を読んで該当版を `CALL` するだけなので、各複製の中では `acc.Len()` はコンパイル時定数になり、コストはグローバル 1 回読みと数回の比較と 1 回の CALL だけで、ループ本体は archsimd 版と同じ命令になるはずです。詳細実装は以下の `midway` パッケージが担っていました:
 
 - 複製名の `@simd<N>` を組み立てている箇所: [`cmd/compile/internal/midway/rewrite.go`](https://github.com/golang/go/blob/go1.27.1/src/cmd/compile/internal/midway/rewrite.go)（`fmt.Sprintf("%s@simd%d", ...)`）。同じ関数がディスパッチ用の `switch` 文も生成していました。
-- どの幅で複製するかを決めている箇所: [`cmd/compile/internal/midway/midway.go`](https://github.com/golang/go/blob/go1.27.1/src/cmd/compile/internal/midway/midway.go) の `rewriteSizes()`。**amd64 は `{0, 128, 256, 512}`、arm64 と wasm は `{0, 128}`** を返します。上記で挙げた 4 つの複製がちょうどこれに該当します。
+- どの幅で複製するかを決めている箇所: [`cmd/compile/internal/midway/midway.go`](https://github.com/golang/go/blob/go1.27.1/src/cmd/compile/internal/midway/midway.go) の `rewriteSizes()`。amd64 は `{0, 128, 256, 512}`、arm64 と wasm は `{0, 128}` を返します。上記で挙げた 4 つの複製がちょうどこれに該当します。
 - ディスパッチの判定に使う変数: [`src/simd/midway_common.go`](https://github.com/golang/go/blob/go1.27.1/src/simd/midway_common.go) の `maxVectorSize`
 
 また、今回の教材で複製される側のコードは[`internal/vec/dot_portable.go`](https://github.com/po3rin/gocon2026-simd-search/blob/main/internal/vec/dot_portable.go)で、次のコマンドでシンボルが確認できます。
@@ -589,7 +589,7 @@ GOEXPERIMENT=simd GOARCH=amd64 go build -gcflags=-S ./internal/vec 2>&1 | grep '
 
 ポータブル版の提案スレッド [#78902](https://github.com/golang/go/issues/78902) に、何を入れるかの基準が明記されているため、それを基準に考えてみます。
 
-> In this version, the supported vector methods are those in the **intersection of the wasm SIMD API and the current amd64 SIMD API** … The portable API will be expanded over time by various architecture-specific APIs with emulations to fill in the intersection.
+> In this version, the supported vector methods are those in the intersection of the wasm SIMD API and the current amd64 SIMD API … The portable API will be expanded over time by various architecture-specific APIs with emulations to fill in the intersection.
 
 「wasm と amd64 の共通部分」が基準ということなので、各アーキの `archsimd` を実際に引いて共通部分を調べてみました。
 
@@ -609,7 +609,7 @@ GOEXPERIMENT=simd GOOS=js GOARCH=wasm go doc simd/archsimd.Int8x16
 - `ExtendToInt16()` は `Int8x16`（128 [bit]）から `Int16x16`（256 [bit]）を返すため、レジスタ幅が倍になる操作です。#78902 によると、この形はポータブルには持ち込めないので、入るとしたら同じ幅でレーン数が半分にするなどの制限が入ることになるのかな、と思います
 - popcount も、64 [bit] 単位（`Uint64x4.OnesCount`、AVX-512 VPOPCNTDQ）は arm64 にありませんでした
 
-### 2. ClearAVXUpperBits を自分で呼ぶ必要がある
+### 2. ClearAVXUpperBits を自分で呼ぶ必要があること
 
 `archsimd.ClearAVXUpperBits()` は VZEROUPPER という命令に対応する関数で、SIMD で使ったレジスタの上位 128 [bit] をゼロに掃除するためのものです。これを置かないと、SIMD からスカラの計算に戻る境界で Intel 機が大きく遅くなります。教材の付録には、これ 1 命令の有無で内積単体が 167.4 [ns] と 23.4 [ns]（7.1 倍）変わった実測が載っています。YMM レジスタの上位 128 [bit] に値が残った状態（dirty）でレガシー SSE 命令を実行すると、命令ごとに偽の依存とマージ μop が挿入されて蓄積するためです。
 
@@ -617,14 +617,6 @@ GOEXPERIMENT=simd GOOS=js GOARCH=wasm go doc simd/archsimd.Int8x16
 
 - [#79984](https://github.com/golang/go/issues/79984)（open）: simd の演算がループ不変式の巻き上げ（hoisting）の対象として扱われていない
 - [#78138](https://github.com/golang/go/issues/78138)（open）: `VPSRLW` の定数畳み込み規則が無く、`NotEqual` のコード生成も最適でない
-
-### 3. int8 から int16 を経由する理由
-
-型の流れで `ExtendToInt16` を挟む部分で、int8 から直接 int32 にできないのかと思いましたが、調べると**AVX2 には int8 の積和命令が存在しませんでした**。`Int8x16` のメソッドは `Mul`（int8 → int8、溢れる）と `MulSign` だけで、`DotProduct*` が 1 つもありません。積和を持っているのは int16 のほうなので、**int16 にするのは「積和命令に到達するため」**でした。直接 int32 にする `Int8x16.ExtendToInt32()` は**存在します**が、戻り型が `Int32x16` で 512 [bit] になります。AVX-512 が必要なので、AVX2 機では使えません。
-
-ここに気づくと納得が早い。`256 [bit] / 16 要素 = 16 bit/要素` なので、int8（128 [bit]）では積が入らず、int32（512 [bit]）では収まりません。**「1 命令で 16 要素を処理する」と決めた時点で、中間表現は int16 以外にありえません。**
-
-なお arm64 は経路が逆でした。`Int8x16.MulWidenLo`（SMULL、int8 * int8 → int16 の幅拡張つき掛け算）が**ある**代わりにペア積和が**ない**ので、「掛けながら広げて、そのあともう一度広げる」3 段構成になります。amd64 側に `MulWiden*` は 1 つもありません。
 
 ## おわりに
 
