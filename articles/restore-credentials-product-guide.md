@@ -105,10 +105,10 @@ Play Console のヘルプには、Restore Credentials は Android 9 以上で利
 
 Play Console のヘルプは、対象外と例外として次の 4 つを挙げています[^play]。
 
-1. **ゲーム**: 現時点では対象外です。複雑な認証を扱うゲーム向けのガイダンスは、2027 年に示される予定です。単一のアカウントで遊ぶゲームには、Restore Credentials の導入が強く推奨されています。ゲームかどうかは、Play Console のストアの設定で選ぶカテゴリで決まります[^play]。同じページの FAQ（メモリの要件の項）には、異なる技術的なしきい値を適用してもらう目的で、アプリの実態と異なるカテゴリに変えることは、ストアの掲載情報に関するポリシーの違反にあたると書かれています[^play]。要件を避けるためにカテゴリを変えることは避けてください。
+1. **ゲーム**: 現時点では対象外です[^games]。
 2. **完全に非公開のアプリと、企業の端末管理アプリ**: 要件の範囲外です。
-3. **規制業種**: 金融やヘルスケアのように、厳しい規制やコンプライアンスの要請がサインイン機能に影響するアプリは、例外の対象になる「場合がある（may be eligible）」と書かれています。例外を受けるには、施行日より前に Play Console から申請する必要があります。
-4. **Block Store の経過措置**: 2026 年 9 月 30 日までに Block Store を使った仕組みが完成して本番で動いており、ユーザのサインイン状態を正常に復元できている場合に限り、準拠とみなされる可能性があります。ほかの方式や、締切より後に完成したものは準拠とみなされません。
+3. **規制業種**: 厳しい規制やコンプライアンスの要請がサインイン機能に影響するアプリは、例外の対象になる場合があります。施行日より前に Play Console から申請する必要があります[^regulated]。
+4. **Block Store の経過措置**: 2026 年 9 月 30 日までに Block Store を使った仕組みが本番で動いていた場合に限り、準拠とみなされる可能性があります[^bs-cutoff]。
 
 Play Console のヘルプには、要件と例外の詳細は今後数か月のうちに公開すると書かれています[^play]。自分のアプリが例外にあたるかの案内も、後日示すと書かれています[^play]。例外を検討しているアプリは、公開前の最新情報を確認してください。
 
@@ -427,6 +427,9 @@ FiPA は、Restore Credentials の代わりにはならないと筆者は考え�
 - [OAuth 2.0 for First-Party Applications（IETF Datatracker）](https://datatracker.ietf.org/doc/draft-ietf-oauth-first-party-apps/)
 
 [^play]: [Play Console technical quality requirements](https://support.google.com/googleplay/android-developer/answer/17492799) の「Zero-tap sign-in restoration」節と FAQ を参照してください。
+[^games]: 複雑な認証を扱うゲーム向けのガイダンスは 2027 年に示される予定で、単一のアカウントで遊ぶゲームには Restore Credentials の導入が強く推奨されています。ゲームかどうかは、Play Console のストアの設定で選ぶカテゴリで決まります。同じページの FAQ（メモリの要件の項）には、異なる技術的なしきい値を適用してもらう目的で、アプリの実態と異なるカテゴリに変えることは、ストアの掲載情報に関するポリシーの違反にあたると書かれています。要件を避けるためにカテゴリを変えることは避けてください。[Play Console technical quality requirements](https://support.google.com/googleplay/android-developer/answer/17492799) の「Exceptions and scope」節と FAQ を参照してください。
+[^regulated]: 例として金融やヘルスケアが挙げられています。原文は "may be eligible for an exemption" で、例外が認められると確約されているわけではありません。[Play Console technical quality requirements](https://support.google.com/googleplay/android-developer/answer/17492799) の「Exceptions and scope」節を参照してください。
+[^bs-cutoff]: 条件は、Block Store を使った仕組みが完成して本番で動いており、ユーザのサインイン状態を正常に復元できていることです。ほかの方式や、締切より後に完成したものは準拠とみなされません。[Play Console technical quality requirements](https://support.google.com/googleplay/android-developer/answer/17492799) の「Exceptions and scope」節と FAQ を参照してください。
 [^blog26]: [Elevating app quality: Reducing memory usage and improving device migration](http://android-developers.googleblog.com/2026/08/app-quality-memory-optimization-secure-onboarding.html) を参照してください。
 [^about]: [About Restore Credentials](https://developer.android.com/identity/sign-in/restore-credentials) を参照してください。
 [^impl]: [Implement Restore Credentials with Credential Manager](https://developer.android.com/identity/sign-in/restore-credentials-implementation) を参照してください。
