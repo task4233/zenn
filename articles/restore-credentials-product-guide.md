@@ -75,16 +75,14 @@ Android Developers Blog では、Restore Credentials を導入した事例とし
 
 ### 1.3 スケジュール
 
-要件に関係する日付と、それぞれがあなたのアプリにとって何を意味するかは、次のとおりです。
+要件に関係する日付は、次のとおりです。
 
-| 日付 | 出来事 | あなたのアプリにとっての意味 |
-|---|---|---|
-| 2024 年 11 月 20 日 | Restore Credentials が Credential Manager のライブラリ（androidx.credentials 1.5.0-beta01 以降）で使えるようになった[^blog24] | 要件のための新しい API を待つ必要はなく、今から導入できる |
-| 2026 年 8 月 26 日 | Zero-Tap Sign-In restoration の要件が発表された[^blog26] | ここから施行まで、およそ 8 か月 |
-| 2026 年 9 月 30 日 | Block Store の経過措置の締切[^play] | この日までに Block Store を使った仕組みが本番で動いていたアプリにだけ関係する |
-| 2027 年 4 月 | 要件の施行[^play] | 対象のアプリは、この時点で対応している必要がある |
+- **2024 年 11 月 20 日**: Restore Credentials が Credential Manager のライブラリ（androidx.credentials 1.5.0-beta01 以降）で使えるようになった[^blog24]
+- **2026 年 8 月 26 日**: Zero-Tap Sign-In restoration の要件が発表された[^blog26]
+- **2026 年 9 月 30 日**: Block Store の経過措置が締め切られる[^play]
+- **2027 年 4 月**: 要件が施行される[^play]
 
-Block Store の経過措置は、締切の時点ですでに Block Store を使った仕組みが本番で動いているアプリにだけ関係します（2.2 節）。これから Block Store で対応しようとしても間に合わないので、新たに対応するアプリは Restore Credentials を前提にしてください。また、3.2 節で述べるとおり、restore key は旧端末で作られている必要があるので、施行日の直前ではなく、早めにリリースするほど効果が出ます。
+Restore Credentials は要件の発表より前から使えるので、要件のための新しい API を待つ必要はなく、今から導入できます。Block Store の経過措置は、締切の時点ですでに Block Store を使った仕組みが本番で動いているアプリにだけ関係します（2.2 節）。これから Block Store で対応しようとしても間に合わないので、新たに対応するアプリは Restore Credentials を前提にしてください。また、3.2 節で述べるとおり、restore key は旧端末で作られている必要があるので、施行日の直前ではなく、早めにリリースするほど効果が出ます。
 
 ### 1.4 対応しないと何が起きるか
 
